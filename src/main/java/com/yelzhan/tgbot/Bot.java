@@ -28,7 +28,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        update.getUpdateId();
+        //update.getUpdateId();
 
         SendMessage sendMessage = new SendMessage();
 
@@ -69,6 +69,9 @@ public class Bot extends TelegramLongPollingBot {
     private String showInfo(Message message, SendMessage sendMessage) {
         if (message.hasText()) {
             if (message.getText().equals("/start")) {
+                message.getChatId();
+                message.getChat().getUserName();
+
                 String text = "Hello, " + message.getFrom().getFirstName() + "!\n" +
                         "You can look information about Currency Changes of KZT \n" +
                         "Just send me command: /get_kzt_currency";
@@ -89,7 +92,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String infoCallback(String text) {
-
+        //RestTemplate should be here
         if (text.equals("USD")) {
             Currency currency = new Currency("USD");
             return currency.getChanges();
