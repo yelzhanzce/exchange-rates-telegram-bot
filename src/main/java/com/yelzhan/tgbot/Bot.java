@@ -84,7 +84,7 @@ public class Bot extends TelegramLongPollingBot {
             }
             if (message.getText().equals("/get_kzt_currency")) {
                 setInline(sendMessage);
-                String text = "Choose...";
+                String text = "Chooseone...";
                 return text;
             }
         }
