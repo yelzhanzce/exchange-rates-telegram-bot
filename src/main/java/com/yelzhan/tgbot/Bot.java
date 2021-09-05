@@ -1,5 +1,13 @@
 package com.yelzhan.tgbot;
 
+import com.google.gson.Gson;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -69,9 +77,10 @@ public class Bot extends TelegramLongPollingBot {
     private String showInfo(Message message, SendMessage sendMessage) {
         if (message.hasText()) {
             if (message.getText().equals("/start")) {
-                message.getChatId();
-                message.getChat().getUserName();
-
+                User user = new User();
+                user.setUsername(message.getChat().getFirstName());
+                user.setChatId(message.getChatId() + "");
+                addUser(user);
                 String text = "Hello, " + message.getFrom().getFirstName() + "!\n" +
                         "You can look information about Currency Changes of KZT \n" +
                         "Just send me command: /get_kzt_currency";
@@ -84,29 +93,82 @@ public class Bot extends TelegramLongPollingBot {
             }
             if (message.getText().equals("/get_kzt_currency")) {
                 setInline(sendMessage);
-                String text = "Chooseone...";
+                String text = "Choose...";
                 return text;
             }
         }
         return "I dont understand you! \nOkay bro, I will help you \nJust send me this command: /help";
     }
+    public void addUser(User user){
+        String url = "https://currency-changes-serverapp.herokuapp.com/api/user/addUser";
+        User us = getUserByChatId(user);
+        if (us == null){
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+            JSONObject jsonObject = new JSONObject(user);
+
+            HttpEntity<String> httpEntity = new HttpEntity<String>(jsonObject.toString(), httpHeaders);
+            ResponseEntity<User> responseEntity = restTemplate.postForEntity(url, httpEntity, User.class);
+            User userFromBody = responseEntity.getBody();
+            System.out.println(responseEntity);
+            System.out.println(userFromBody);
+            System.out.println("User added successfully!!!");
+        }
+
+    }
+    public User getUserByChatId(User user){
+        String url = "https://currency-changes-serverapp.herokuapp.com/api/user/";
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        JSONObject jsonObject = new JSONObject(user);
+
+        HttpEntity<String> httpEntity = new HttpEntity<String>(jsonObject.toString(), httpHeaders);
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity(url, httpEntity, User.class);
+        User userFromBody = responseEntity.getBody();
+//        System.out.println(responseEntity);
+//        System.out.println(userFromBody);
+        return userFromBody;
+
+    }
 
     private String infoCallback(String text) {
         //RestTemplate should be here
         if (text.equals("USD")) {
-            Currency currency = new Currency("USD");
-            return currency.getChanges();
+//            Currency currency = new Currency("USD");
+            return getCurrencyByName("USD");
         }
         if (text.equals("EUR")) {
-            Currency currency = new Currency("EUR");
-            return currency.getChanges();
+//            Currency currency = new Currency("EUR");
+            return getCurrencyByName("EUR");
         }
         if (text.equals("RUB")) {
-            Currency currency = new Currency("RUB");
-            return currency.getChanges();
+//            Currency currency = new Currency("RUB");
+            return getCurrencyByName("RUB");
         }
 
         return text;
+    }
+
+    public String getCurrencyByName(String currencyName){
+        String url = "https://currency-changes-serverapp.herokuapp.com/api/currency/" + currencyName;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
+        String json = responseEntity.getBody();
+
+        Gson gson = new Gson();
+        JSONArray jsonArray = new JSONArray(json);
+        String resText = "";
+        int num = jsonArray.length() >= 10 ? 10 : jsonArray.length();
+        for (int i = 0; i < num; i++){
+            Currency currency = gson.fromJson(jsonArray.get(i).toString(), Currency.class);
+            resText += "1 " + currency.getName() + " = " + currency.getKzt_value() + " KZT | Rate for " + currency.getDate().toString().split("\\s+")[0] + " | Changes: " + Math.floor(currency.getChanges() * 100.0) / 100.0 + "%\n";
+        }
+        System.out.println(resText);
+        return resText;
     }
 
     private void setInline(SendMessage sendMessage) {

@@ -1,42 +1,70 @@
 package com.yelzhan.tgbot;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
-import java.io.IOException;
+
+import java.sql.Timestamp;
 
 public class Currency {
-    private Document document;
+
+    private Long id;
+
+    private String name;
+
+    private double kzt_value;
+
+    private Timestamp date;
+
+    private double changes;
 
     public Currency() {
 
     }
 
-    public Currency(String link) {
-        run(link);
+    public Currency(Long id, String name, double kzt_value, Timestamp date, double changes) {
+        this.id = id;
+        this.name = name;
+        this.kzt_value = kzt_value;
+        this.date = date;
+        this.changes = changes;
     }
 
-    private void run(String link) {
-        try {
-            document = Jsoup.connect("https://www.exchangerates.org.uk/" + link + "-KZT-exchange-rate-history.html").get();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Long getId() {
+        return id;
     }
 
-    public String getChanges() {
-        String res = "";
-        Elements elements = document.getElementsByTag("tr");
-        for (int i = 2; i < 13; i++) {
-            Elements td = elements.get(i).getElementsByTag("td");
-            for (int j = 1; j < td.size(); j++) {
-                res += td.get(j).text() + " | ";
-            }
-            res = res.substring(0, res.length() - 2) + "\n";
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-        }
+    public String getName() {
+        return name;
+    }
 
-        return res;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getKzt_value() {
+        return kzt_value;
+    }
+
+    public void setKzt_value(double kzt_value) {
+        this.kzt_value = kzt_value;
+    }
+
+    public Timestamp getDate() {
+        return date;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
+    }
+
+    public double getChanges() {
+        return changes;
+    }
+
+    public void setChanges(double changes) {
+        this.changes = changes;
     }
 }
